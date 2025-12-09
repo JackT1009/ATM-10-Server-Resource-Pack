@@ -3,7 +3,7 @@
   "overrides": [
     { 
       "predicate": { "custom_model_data": 1001 }, 
-      "model": "minecraft:custom/western_hat" 
+      "model": "minecraft:western_hat/western_hat" 
     }
   ]
 }
