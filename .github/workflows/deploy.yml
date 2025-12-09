@@ -40,15 +40,16 @@ jobs:
           SERVER_ID: ${{ secrets.SERVER_ID }}
           PACK_URL: https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/resourcepack.zip
         run: |
-          # FIX: We removed "push" because the server said it was "trailing data"
-          # We also added the Hash, as many mods prefer: /pack set <url> <hash>
+          # FIX: The mod requires quotes around the URL: "https://..."
+          # We use backslashes (\) to ensure the quotes travel safely through the API.
           
-          MC_COMMAND="pack set $PACK_URL $PACK_HASH"
+          # This constructs the command: pack set "URL" push
+          CMD="pack set \\\"$PACK_URL\\\" push"
 
-          echo "Sending command to server..."
+          echo "Sending command: $CMD"
 
           curl -X POST "$PANEL_URL/api/client/servers/$SERVER_ID/command" \
             -H "Authorization: Bearer $API_KEY" \
             -H "Content-Type: application/json" \
             -H "Accept: Application/vnd.pterodactyl.v1+json" \
-            -d "{\"command\": \"$MC_COMMAND\"}"
+            -d "{\"command\": \"$CMD\"}"
