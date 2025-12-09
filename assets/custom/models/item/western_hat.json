@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"textures": {
 		"0": "custom:item/western_hat1",
-		"1": "custom:item/western_hat2",
+		"1": "custom:item/western_hat1",
 		"particle": "custom:item/western_hat1"
 	},
 	"elements": [
