@@ -2,9 +2,9 @@
 	"format_version": "1.21.6",
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "custom:item/western_hat1",
-		"1": "custom:item/western_hat1",
-		"particle": "custom:item/western_hat1"
+		"0": "minecraft:block/cobblestone",
+		"1": "minecraft:block/cobblestone"
+		"particle": "minecraft:block/cobblestone"
 	},
 	"elements": [
 		{
