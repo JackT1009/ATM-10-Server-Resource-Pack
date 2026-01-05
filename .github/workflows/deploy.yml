@@ -1,4 +1,4 @@
-name: Deploy Fabric Pack
+name: Deploy ATM10 Pack
 
 on:
   push:
@@ -24,11 +24,15 @@ jobs:
       - name: Zip Resource Pack
         run: zip -r resourcepack.zip . -x "*.git*" ".github*"
 
+      - name: Calculate SHA1
+        id: sha1
+        run: echo "hash=$(sha1sum resourcepack.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: fabric-v${{ github.run_number }}
-          name: Fabric Pack v${{ github.run_number }}
+          tag_name: atm10-v${{ github.run_number }}
+          name: ATM10 Pack v${{ github.run_number }}
           files: resourcepack.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,10 +42,14 @@ jobs:
           PANEL_URL: ${{ secrets.PTERODACTYL_URL }}
           API_KEY: ${{ secrets.PTERODACTYL_KEY }}
           SERVER_ID: ${{ secrets.SERVER_ID }}
-          PACK_URL: https://github.com/${{ github.repository }}/releases/download/fabric-v${{ github.run_number }}/resourcepack.zip
+          PACK_URL: https://github.com/${{ github.repository }}/releases/download/atm10-v${{ github.run_number }}/resourcepack.zip
+          PACK_HASH: ${{ steps.sha1.outputs.hash }}
         run: |
-          # Better Server Packs Command
-          CMD="pack set \\\"$PACK_URL\\\" push"
+          # KubeJS Command
+          CMD="atmupdatepack \\\"$PACK_URL\\\" \\\"$PACK_HASH\\\""
+
+          echo "Waiting 15 seconds..."
+          sleep 15
           
           echo "Sending command..."
           curl -X POST "$PANEL_URL/api/client/servers/$SERVER_ID/command" \
