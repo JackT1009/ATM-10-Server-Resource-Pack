@@ -1,9 +1,9 @@
 {
 	"textures": {
-		"0": "item/western_hat1",
-		"1": "item/western_hat2",
-		"particle": "item/western_hat1"
-	},
+    "0": "custom:item/western_hat1",
+    "1": "custom:item/western_hat2",
+    "particle": "custom:item/western_hat1"
+},
 	"elements": [
 		{
 			"from": [6, 0, 3],
