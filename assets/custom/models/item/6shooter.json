@@ -1,11 +1,9 @@
 {
-	"format_version": "1.21.6",
-	"credit": "Jack",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "item/6shooter1",
-		"1": "item/6shooter2",
-		"particle": "item/6shooter1"
+		"0": "custom:item/6shooter1",
+		"1": "custom:item/6shooter2",
+		"particle": "custom:item/6shooter1"
 	},
 	"elements": [
 		{

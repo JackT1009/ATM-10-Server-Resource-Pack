@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/carved_pumpkin",
+  "overrides": [
+    /* To add a new item:
+       1. Copy the line below.
+       2. Change the 'custom_model_data' to a new unique number.
+       3. Change 'your_item_name' to match your JSON filename.
+    */
+    { "predicate": { "custom_model_data": 1 }, "model": "custom:item/western_hat" },
+    { "predicate": { "custom_model_data": 2 }, "model": "custom:item/your_item_name" }
+  ]
+}
