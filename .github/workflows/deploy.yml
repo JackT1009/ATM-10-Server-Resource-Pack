@@ -1,4 +1,4 @@
-name: Deploy ATM10 Pack
+name: Deploy ATM 10 Pack
 
 on:
   push:
@@ -31,8 +31,8 @@ jobs:
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: atm10-v${{ github.run_number }}
-          name: ATM10 Pack v${{ github.run_number }}
+          tag_name: v${{ github.run_number }}
+          name: Pack v${{ github.run_number }}
           files: resourcepack.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,17 +42,21 @@ jobs:
           PANEL_URL: ${{ secrets.PTERODACTYL_URL }}
           API_KEY: ${{ secrets.PTERODACTYL_KEY }}
           SERVER_ID: ${{ secrets.SERVER_ID }}
-          PACK_URL: https://github.com/${{ github.repository }}/releases/download/atm10-v${{ github.run_number }}/resourcepack.zip
+          PACK_URL: https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/resourcepack.zip
           PACK_HASH: ${{ steps.sha1.outputs.hash }}
         run: |
-          # KubeJS Command
+          # 1. Prepare the Command
+          # Syntax: /atmupdatepack "url" "hash"
           CMD="atmupdatepack \\\"$PACK_URL\\\" \\\"$PACK_HASH\\\""
 
-          echo "Waiting 15 seconds..."
-          sleep 15
+          echo "Waiting 10 seconds for GitHub to process..."
+          sleep 10
           
-          echo "Sending command..."
-          curl -X POST "$PANEL_URL/api/client/servers/$SERVER_ID/command" \
+          echo "Sending to Server ID: $SERVER_ID"
+          echo "Command: $CMD"
+
+          # 2. Send with Verbose Logging (-v) so we see errors
+          curl -v --fail -X POST "$PANEL_URL/api/client/servers/$SERVER_ID/command" \
             -H "Authorization: Bearer $API_KEY" \
             -H "Content-Type: application/json" \
             -H "Accept: Application/vnd.pterodactyl.v1+json" \
