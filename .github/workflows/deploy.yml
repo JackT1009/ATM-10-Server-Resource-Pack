@@ -59,9 +59,8 @@ jobs:
             echo "Branch is MAIN. Configured for ATM 10 (KubeJS)."
             TARGET_ID="$PROD_ID"
             
-            # Syntax: /atmupdatepack <url> <hash>
-            # No quotes needed around URL for this custom command
-            CMD="atmupdatepack $PACK_URL $PACK_HASH"
+            # FIXED: Added quotes around the URL and Hash to prevent parsing errors
+            CMD="atmupdatepack \\\"$PACK_URL\\\" \\\"$PACK_HASH\\\""
 
           else
             # --- TEST SERVER (Fabric Mod) ---
