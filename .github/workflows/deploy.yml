@@ -1,8 +1,8 @@
-name: Deploy Resource Pack
+name: Deploy Fabric Pack
 
 on:
   push:
-    branches: ["main", "test"]
+    branches: ["main"]
 
 permissions:
   contents: write
@@ -24,61 +24,27 @@ jobs:
       - name: Zip Resource Pack
         run: zip -r resourcepack.zip . -x "*.git*" ".github*"
 
-      # 1. Calculate the SHA1 Hash (REQUIRED for KubeJS/Vanilla)
-      - name: Calculate SHA1
-        id: sha1
-        run: echo "hash=$(sha1sum resourcepack.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
-
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}-v${{ github.run_number }}
-          name: ${{ github.ref_name }} Pack v${{ github.run_number }}
+          tag_name: fabric-v${{ github.run_number }}
+          name: Fabric Pack v${{ github.run_number }}
           files: resourcepack.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Notify Correct Server
+      - name: Notify Server
         env:
           PANEL_URL: ${{ secrets.PTERODACTYL_URL }}
           API_KEY: ${{ secrets.PTERODACTYL_KEY }}
-          TEST_ID: ${{ secrets.SERVER_ID }}
-          PROD_ID: ${{ secrets.ATM10_SERVER_ID }}
-          PACK_URL: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}-v${{ github.run_number }}/resourcepack.zip
-          PACK_HASH: ${{ steps.sha1.outputs.hash }}
+          SERVER_ID: ${{ secrets.SERVER_ID }}
+          PACK_URL: https://github.com/${{ github.repository }}/releases/download/fabric-v${{ github.run_number }}/resourcepack.zip
         run: |
-          echo "Waiting 15 seconds for GitHub to process file..."
-          sleep 15
+          # Better Server Packs Command
+          CMD="pack set \\\"$PACK_URL\\\" push"
           
-          # ---------------------------------------------------
-          # LOGIC SWITCH
-          # ---------------------------------------------------
-          
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # --- ATM 10 (Using our KubeJS Script) ---
-            echo "Branch is MAIN. Configured for ATM 10 (KubeJS)."
-            TARGET_ID="$PROD_ID"
-            
-            # FIXED: Added quotes around the URL and Hash to prevent parsing errors
-            CMD="atmupdatepack \\\"$PACK_URL\\\" \\\"$PACK_HASH\\\""
-
-          else
-            # --- TEST SERVER (Fabric Mod) ---
-            echo "Branch is TEST. Configured for Test Server (Better Server Packs)."
-            TARGET_ID="$TEST_ID"
-            
-            # Syntax: /pack set "url" push
-            CMD="pack set \\\"$PACK_URL\\\" push"
-          fi
-
-          # ---------------------------------------------------
-          # SENDING
-          # ---------------------------------------------------
-
-          echo "Sending command to Server ID: $TARGET_ID"
-          echo "Command: $CMD"
-
-          curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
+          echo "Sending command..."
+          curl -X POST "$PANEL_URL/api/client/servers/$SERVER_ID/command" \
             -H "Authorization: Bearer $API_KEY" \
             -H "Content-Type: application/json" \
             -H "Accept: Application/vnd.pterodactyl.v1+json" \
