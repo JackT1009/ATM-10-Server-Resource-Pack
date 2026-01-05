@@ -24,6 +24,7 @@ jobs:
       - name: Zip Resource Pack
         run: zip -r resourcepack.zip . -x "*.git*" ".github*"
 
+      # 1. Calculate the SHA1 Hash (REQUIRED for KubeJS/Vanilla)
       - name: Calculate SHA1
         id: sha1
         run: echo "hash=$(sha1sum resourcepack.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
@@ -54,46 +55,32 @@ jobs:
           # ---------------------------------------------------
           
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # --- ATM 10 (NeoForge) ---
-            echo "Branch is MAIN. Configured for ATM 10 (Dynamic Pack Manager)."
+            # --- ATM 10 (Using our KubeJS Script) ---
+            echo "Branch is MAIN. Configured for ATM 10 (KubeJS)."
             TARGET_ID="$PROD_ID"
             
-            # 1. REMOVE Command (To prevent crash if it already exists)
-            CMD_REMOVE="dynamicpack remove main_pack"
-            
-            # 2. ADD Command (Re-add it with the new URL)
-            # Syntax: /dynamicpack add <name> <url> <required> [message]
-            CMD_ADD="dynamicpack add main_pack \\\"$PACK_URL\\\" true \\\"Pack Updated!\\\""
-
-            echo "Sending REMOVE command to clean up old pack..."
-            curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
-              -H "Authorization: Bearer $API_KEY" \
-              -H "Content-Type: application/json" \
-              -H "Accept: Application/vnd.pterodactyl.v1+json" \
-              -d "{\"command\": \"$CMD_REMOVE\"}"
-
-            # Small sleep to let the server process the removal
-            sleep 2
-
-            echo "Sending ADD command..."
-            curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
-              -H "Authorization: Bearer $API_KEY" \
-              -H "Content-Type: application/json" \
-              -H "Accept: Application/vnd.pterodactyl.v1+json" \
-              -d "{\"command\": \"$CMD_ADD\"}"
+            # Syntax: /atmupdatepack <url> <hash>
+            # No quotes needed around URL for this custom command
+            CMD="atmupdatepack $PACK_URL $PACK_HASH"
 
           else
-            # --- TEST SERVER (Fabric) ---
+            # --- TEST SERVER (Fabric Mod) ---
             echo "Branch is TEST. Configured for Test Server (Better Server Packs)."
             TARGET_ID="$TEST_ID"
             
-            # COMMAND FOR 'BETTER SERVER PACKS'
+            # Syntax: /pack set "url" push
             CMD="pack set \\\"$PACK_URL\\\" push"
-            
-            echo "Sending command to Test Server..."
-            curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
-              -H "Authorization: Bearer $API_KEY" \
-              -H "Content-Type: application/json" \
-              -H "Accept: Application/vnd.pterodactyl.v1+json" \
-              -d "{\"command\": \"$CMD\"}"
           fi
+
+          # ---------------------------------------------------
+          # SENDING
+          # ---------------------------------------------------
+
+          echo "Sending command to Server ID: $TARGET_ID"
+          echo "Command: $CMD"
+
+          curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Accept: Application/vnd.pterodactyl.v1+json" \
+            -d "{\"command\": \"$CMD\"}"
