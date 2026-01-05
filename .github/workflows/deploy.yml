@@ -41,16 +41,14 @@ jobs:
         env:
           PANEL_URL: ${{ secrets.PTERODACTYL_URL }}
           API_KEY: ${{ secrets.PTERODACTYL_KEY }}
-          
-          # FABRIC SERVER ID (Existing)
           TEST_ID: ${{ secrets.SERVER_ID }}
-          
-          # ATM 10 SERVER ID (New)
           PROD_ID: ${{ secrets.ATM10_SERVER_ID }}
-          
           PACK_URL: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}-v${{ github.run_number }}/resourcepack.zip
           PACK_HASH: ${{ steps.sha1.outputs.hash }}
         run: |
+          echo "Waiting 15 seconds for GitHub to process file..."
+          sleep 15
+          
           # ---------------------------------------------------
           # LOGIC SWITCH
           # ---------------------------------------------------
@@ -60,32 +58,42 @@ jobs:
             echo "Branch is MAIN. Configured for ATM 10 (Dynamic Pack Manager)."
             TARGET_ID="$PROD_ID"
             
-            # COMMAND FOR 'DYNAMIC PACK MANAGER'
+            # 1. REMOVE Command (To prevent crash if it already exists)
+            CMD_REMOVE="dynamicpack remove main_pack"
+            
+            # 2. ADD Command (Re-add it with the new URL)
             # Syntax: /dynamicpack add <name> <url> <required> [message]
-            CMD="dynamicpack add main_pack \\\"$PACK_URL\\\" true \\\"Pack Updated!\\\""
+            CMD_ADD="dynamicpack add main_pack \\\"$PACK_URL\\\" true \\\"Pack Updated!\\\""
+
+            echo "Sending REMOVE command to clean up old pack..."
+            curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
+              -H "Authorization: Bearer $API_KEY" \
+              -H "Content-Type: application/json" \
+              -H "Accept: Application/vnd.pterodactyl.v1+json" \
+              -d "{\"command\": \"$CMD_REMOVE\"}"
+
+            # Small sleep to let the server process the removal
+            sleep 2
+
+            echo "Sending ADD command..."
+            curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
+              -H "Authorization: Bearer $API_KEY" \
+              -H "Content-Type: application/json" \
+              -H "Accept: Application/vnd.pterodactyl.v1+json" \
+              -d "{\"command\": \"$CMD_ADD\"}"
 
           else
-            # --- EXISTING SERVER (Fabric) ---
+            # --- TEST SERVER (Fabric) ---
             echo "Branch is TEST. Configured for Test Server (Better Server Packs)."
             TARGET_ID="$TEST_ID"
             
             # COMMAND FOR 'BETTER SERVER PACKS'
-            # Syntax: /pack set "url" push
             CMD="pack set \\\"$PACK_URL\\\" push"
+            
+            echo "Sending command to Test Server..."
+            curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
+              -H "Authorization: Bearer $API_KEY" \
+              -H "Content-Type: application/json" \
+              -H "Accept: Application/vnd.pterodactyl.v1+json" \
+              -d "{\"command\": \"$CMD\"}"
           fi
-
-          # ---------------------------------------------------
-          # SENDING
-          # ---------------------------------------------------
-
-          echo "Waiting 15 seconds for GitHub to process file..."
-          sleep 15
-
-          echo "Sending command to Server ID: $TARGET_ID"
-          echo "Command: $CMD"
-
-          curl -X POST "$PANEL_URL/api/client/servers/$TARGET_ID/command" \
-            -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            -H "Accept: Application/vnd.pterodactyl.v1+json" \
-            -d "{\"command\": \"$CMD\"}"
