@@ -10,8 +10,3 @@
     { "predicate": { "custom_model_data": 2 }, "model": "custom:item/your_item_name" }
   ]
 }
-
-
-
-
-
