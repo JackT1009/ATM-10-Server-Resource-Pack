@@ -1,4 +1,4 @@
-name: Deploy ATM 10 Pack
+name: Deploy Resource Pack (NeoForge)
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Using your Ubuntu runner
 
     steps:
       - name: Clean Workspace
@@ -18,44 +18,38 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Zip
-        run: sudo apt-get install zip -y || echo "Zip likely already installed"
-
       - name: Zip Resource Pack
         run: zip -r resourcepack.zip . -x "*.git*" ".github*"
 
-      - name: Calculate SHA1
-        id: sha1
-        run: echo "hash=$(sha1sum resourcepack.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
-
-      - name: Upload to GitHub Releases
+      - name: Create GitHub Release
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          name: Pack v${{ github.run_number }}
+          name: Server Pack v${{ github.run_number }}
           files: resourcepack.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Notify Server
+      - name: Notify NeoForge Server
         env:
           PANEL_URL: ${{ secrets.PTERODACTYL_URL }}
           API_KEY: ${{ secrets.PTERODACTYL_KEY }}
           SERVER_ID: ${{ secrets.SERVER_ID }}
+          # This URL points directly to the zip file we just uploaded above
           PACK_URL: https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/resourcepack.zip
-          PACK_HASH: ${{ steps.sha1.outputs.hash }}
         run: |
-          # 1. Prepare the Command
-          # Syntax: /atmupdatepack "url" "hash"
-          CMD="atmupdatepack \\\"$PACK_URL\\\" \\\"$PACK_HASH\\\""
+          # This matches the /pack set "URL" push syntax we just added to the Java mod
+          # We use triple backslashes to ensure the quotes survive the JSON stringification
+          CMD="pack set \\\"$PACK_URL\\\" push"
 
-          echo "Waiting 10 seconds for GitHub to process..."
-          sleep 10
+          echo "Waiting 12 seconds for GitHub Release to become public..."
+          sleep 12
           
-          echo "Sending to Server ID: $SERVER_ID"
-          echo "Command: $CMD"
+          echo "Sending command to Server ID: $SERVER_ID"
+          echo "Full Command: $CMD"
 
-          # 2. Send with Verbose Logging (-v) so we see errors
+          # Send the command to Pterodactyl API
           curl -v --fail -X POST "$PANEL_URL/api/client/servers/$SERVER_ID/command" \
             -H "Authorization: Bearer $API_KEY" \
             -H "Content-Type: application/json" \
